@@ -68,8 +68,6 @@ DualVNH5019MotorShield md;
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Begin Transmission");
-
   // Initialisation for the encoders used 
   pinMode(ENCODER_LEFT1, INPUT);
   pinMode(ENCODER_LEFT2, INPUT);
@@ -252,8 +250,6 @@ void calibration() {
   }
 }
 
-
-
 long prevRPMTime = 0;
 float currRPM = 0;
 int measureTime = 20; // Every 40ms
@@ -412,27 +408,40 @@ void loop() {
 void serialIn() {
   if (Serial.available()) {
     char code = Serial.read();
-    int val = Serial.parseInt();
-    // This is a delimiter to end the commands
-    char delim = Serial.read();
-    printed = delim != ':';
+    char code2 = Serial.read();
 
     switch (code) {
       // Move forward by number of blocks
       case 'F':
         forward(1);
+        if (code2) {
+          code = code2;
+          code2 = "";
+        }
         break;
       // Used for backing out of holes
       case 'B':
         forward(-1);
+        if (code2) {
+          code = code2;
+          code2 = "";
+        }
         break;
-      // Left by angles. L90, turn left
+        // Left by angles. L90, turn left
       case 'L':
         turn(90);
+        if (code2) {
+          code = code2;
+          code2 = "";
+        }
         break;
       // Right by angles. R90, turn right
       case 'R':
         turn(-90);
+        if (code2) {
+          code = code2;
+          code2 = "";
+        }
         break;
       // Print out sensor values
       case 'P':
@@ -451,54 +460,59 @@ void serialIn() {
       // Three types of align
       case 'X':
         alignFront();
+        Serial.println("DONE");
+        if (code2) {
+          code = code2;
+          code2 = "";
+        }
         break;
       // Left
       case 'Z':
         alignLeft();
+        Serial.println("DONE");
         break;
       // Right
       case 'C':
         alignRight();
+        Serial.println("DONE");
         break;
-      case 'S':
-        ONE_BLOCK_TICKS = val;
-        ANGLE_LEFT_90 = Serial.parseInt();
-        ANGLE_RIGHT_90 = Serial.parseInt();
-//        ANGLE_LEFT_180 = Serial.parseInt();
-//        ANGLE_RIGHT_180 = Serial.parseInt();
-        MIN_SPEED = Serial.parseInt();
-        MAX_SPEED = Serial.parseInt();
-        TURN_SPEED = Serial.parseInt();
-        ALIGN_DIST_FRONT = Serial.parseInt();
-        DIST_FROM_WALL_FRONT = Serial.parseInt();
-        BRAKE_DELAY = Serial.parseInt();
-        RPM_PRINT_THRES = Serial.parseInt();
-
-        delim = Serial.read();
-        Serial.print(ONE_BLOCK_TICKS);
-        Serial.print(',');
-        Serial.print(ANGLE_LEFT_90);
-        Serial.print(',');
-        Serial.print(ANGLE_RIGHT_90);
-        Serial.print(',');
-//        Serial.print(ANGLE_LEFT_180);
+//      case 'S':
+//        ONE_BLOCK_TICKS = 305;
+//        ANGLE_LEFT_90 = Serial.parseInt();
+//        ANGLE_RIGHT_90 = Serial.parseInt();
+//        MIN_SPEED = Serial.parseInt();
+//        MAX_SPEED = Serial.parseInt();
+//        TURN_SPEED = Serial.parseInt();
+//        ALIGN_DIST_FRONT = Serial.parseInt();
+//        DIST_FROM_WALL_FRONT = Serial.parseInt();
+//        BRAKE_DELAY = Serial.parseInt();
+//        RPM_PRINT_THRES = Serial.parseInt();
+//
+//        delim = Serial.read();
+//        Serial.print(ONE_BLOCK_TICKS);
 //        Serial.print(',');
-//        Serial.print(ANGLE_RIGHT_180);
+//        Serial.print(ANGLE_LEFT_90);
 //        Serial.print(',');
-        Serial.print(MIN_SPEED);
-        Serial.print(',');
-        Serial.print(MAX_SPEED);
-        Serial.print(',');
-        Serial.print(TURN_SPEED);
-        Serial.print(',');
-        Serial.print(ALIGN_DIST_FRONT);
-        Serial.print(',');
-        Serial.print(DIST_FROM_WALL_FRONT);
-        Serial.print(',');
-        Serial.print(BRAKE_DELAY);
-        Serial.print(',');
-        Serial.println(RPM_PRINT_THRES);
-        break;
+//        Serial.print(ANGLE_RIGHT_90);
+//        Serial.print(',');
+////        Serial.print(ANGLE_LEFT_180);
+////        Serial.print(',');
+////        Serial.print(ANGLE_RIGHT_180);
+////        Serial.print(',');
+//        Serial.print(MIN_SPEED);
+//        Serial.print(',');
+//        Serial.print(MAX_SPEED);
+//        Serial.print(',');
+//        Serial.print(TURN_SPEED);
+//        Serial.print(',');
+//        Serial.print(ALIGN_DIST_FRONT);
+//        Serial.print(',');
+//        Serial.print(DIST_FROM_WALL_FRONT);
+//        Serial.print(',');
+//        Serial.print(BRAKE_DELAY);
+//        Serial.print(',');
+//        Serial.println(RPM_PRINT_THRES);
+//        break;
     }
     if (isdigit(code)){
       int val1 = code - '0';
@@ -506,9 +520,6 @@ void serialIn() {
     }
   }
 }
-
-// Arduino -> RPi - Prints values out to the Rpi
-
 
 // read each sensor ~5msec
 float readSensor(int IRpin) {
